@@ -2,38 +2,55 @@
   <div class="home">
     <h3>Welcome to FoxHomes!</h3>
     <h4>Current FoxNumber : {{number}}</h4>
+    <p> Next Number : {{nextNumber}} </p>
     <Fox :image="image"></Fox>
     <button @click.prevent="getFox" class="btn">Next Fox</button>
+    <button @click.prevent="incrementFoxCount" class="btn">Increment Fox Count</button>
   </div>
 </template>
 
 <script>
 import Fox from "@/components/Fox.vue";
 import axios from "axios";
+import { value, computed, watch, onCreated } from "vue-function-api";
 
 export default {
-  name: "home",
-  components: {
-    Fox
-  },
-  data() {
-    return {
-      image: "",
-      number: 0
+  components: { Fox },
+  setup(props, ctx) {
+    const image = value("");
+    const number = value(0);
+    const nextNumber = computed(() => number.value + 1)
+
+    const incrementFoxCount = () => {
+      number.value++;
     };
-  },
-  methods: {
-    async getFox() {
+
+    const getFox = async () => {
       let { data } = await axios.get(
         `https://cors-anywhere.herokuapp.com/https://randomfox.ca/floof/`
       );
-      console.log(data.image);
-      this.image = data.image;
-      this.number = this.number + 1
-    }
-  },
-  created() {
-    this.getFox();
+      image.value = data.image;
+      number.value = number.value + 1;
+    };
+
+    watch(
+      () => number.value,
+      (value, oldValue) => {
+        console.log("number: ", value, oldValue);
+      }
+    );
+
+    onCreated(() => {
+      getFox();
+    });
+
+    return {
+      image,
+      number,
+      getFox,
+      nextNumber,
+      incrementFoxCount
+    };
   }
 };
 </script>
@@ -46,8 +63,9 @@ export default {
 .btn {
   background-color: salmon;
   padding: 0.7rem;
-  width: 9rem;
+  width: 11rem;
   font-family: "Avenir", Helvetica, Arial, sans-serif;
   font-size: 15px;
+  margin: 1rem;
 }
 </style>
